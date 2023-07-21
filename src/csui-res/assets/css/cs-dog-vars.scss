@@ -1,0 +1,70 @@
+$colors: (
+    menu-cl-border: #a0a0a0,
+    menu-cl-shadow: #605F70,
+
+    menu-cl-hover: white,
+    menu-bg-hover: #495057,
+    menu-cl: black,
+);
+
+@function color($color-name) {
+    @return map-get($colors, $color-name);
+}
+
+
+
+$menu-cl-border: #a0a0a0;
+$menu-cl-shadow: #605F70;
+
+$menu-cl-hover: white;
+$menu-bg-hover: #495057;
+$menu-cl: black;
+
+/************************* COMMON STYLES FOR ALL ***************************/
+/*
+    1.
+    Double or triple classes are used to get score 20/30 for selector specifity.
+    Very specific selectors to fight with: usps.com: '#nav-tool-login .unreg ul' and '#nav-tool-login ul'.
+
+    2. TODO: We should not use # selectors since we may have multiple icons, but ID should be unique.
+    This can be solved only with shadow DOM
+
+    3. TODO:
+    :root {
+      --someVar: #000000;
+    }
+
+    4. TODO:
+    z-index: 2147483647; -1 to avoid conflict with FBB. There is a problem with https://www.ipower.com/secure/login.bml#webmail (they reset it to 1)
+*/
+
+$zindex-max: 2147483647;   // 2147483647 is max
+$zindex-menu: $zindex-max;
+$zindex-fbb: $zindex-max - 1; // 
+$zindex-fbi: $zindex-max - 2; // dp-fbi.ts sets it also
+$zindex-logo: $zindex-max - 3; // logo should be under fbb
+$zindex-high: $zindex-max - 4; // Highlighter
+
+@mixin marginBoxReset() {
+  margin: 0;
+  padding: 0;
+  box-sizing: content-box;  /*for Adobe ID login page*/
+  width: auto;
+  overflow: visible; /* for login.iis.net */
+}
+
+@mixin marginPaddingReset() {
+  margin: 0;
+  padding: 0;
+  overflow: visible; /* for login.iis.net */
+}
+
+@mixin dpFont($size) {
+    font: normal $size 'Segoe UI',Verdana,Arial; /*This one is used by MS*/
+    /*font: normal 1em "Trebuchet MS",Arial,Helvetica,sans-serif;*/ /*http://www.cult-f.net/ */
+}
+
+@mixin dpFontNormal() {
+    font: normal 14px / 18px 'Segoe UI',Verdana,Arial; /*This one is used by MS*/
+    /*font: normal 1em "Trebuchet MS",Arial,Helvetica,sans-serif;*/ /*http://www.cult-f.net/ */
+}

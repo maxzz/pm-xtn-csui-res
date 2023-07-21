@@ -1,18 +1,22 @@
 {
-    "name": "pm-xtn-csui-res",
-    "version": "1.0.1",
-    "description": "PM extension content scripts UI resources builder",
-    "type": "module",
-    "main": "./src/index.ts",
-    "files": [
-        "./src"
-    ],
-    "license": "MIT",
-    "scripts": {
-        "dev": "tsc -w"
-    },
-    "dependencies": {
-        "@types/node": "^20.4.2",
-        "pm-xtn-dom": "^1.0.5"
-    }
+  "name": "pm-xtn-csui-res",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  }
 }

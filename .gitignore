@@ -1,2 +1,4 @@
 node_modules
 dist
+src/csui-res/assets/css/*.css
+src/csui-res/assets/css/*.map

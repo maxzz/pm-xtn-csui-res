@@ -1,0 +1,24 @@
+.ripple {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        background-color: #eee;
+        padding: 50%;
+        border-radius: 50%;
+        left: calc(100% * var(--ripple-x));
+        top: calc(100% * var(--ripple-y));
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0;
+        transition: transform 1s, opacity 1s;
+    }
+
+    &:active::before {
+        transition: 0s;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    
+}

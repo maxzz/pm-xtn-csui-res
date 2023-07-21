@@ -1,0 +1,228 @@
+@import 'cs-dog-vars.scss';
+@import 'ui-ripple.scss';
+
+:host {
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: $zindex-fbb;
+
+    // position: absolute;
+    // top: 0;
+    // right: 0;
+    
+    width: 322px;
+    display: block;
+}
+
+html, * {
+    box-sizing: border-box;
+}
+
+.container {
+    width: 322px;
+    position: absolute;
+    top: .6em;
+    left: -.6em;
+    font-family: Arial, sans-serif; //font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: normal;
+    font-size: 14px;
+    color: black;
+    z-index: $zindex-fbb;
+}
+
+$main-radius: 4px;
+$main-color: white;
+
+.main {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    border: 1px solid #969fab;
+    border-radius: $main-radius;
+    box-shadow: 0px 3px 6px #00000040;
+    background-color: $main-color;
+    user-select: none;
+
+    transition: opacity .5s;
+}
+
+.hide-main {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.header { //.main .header
+    display: grid;
+    grid-template-columns: auto 1fr;
+    border-radius: $main-radius $main-radius 0 0;
+    padding-bottom: .4em;
+
+    background: linear-gradient(308.35deg, #bed8ff1a 35.82%, #fff2c61a 89.63%);
+
+    // background-color: rgb(225, 255, 215);
+
+    //background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="4" height="4" viewBox="0 0 4 4"%3E%3Cpath fill="%239C92AC" fill-opacity="0.4" d="M1 3h1v1H1V3zm2-2h1v1H3V1z"%3E%3C/path%3E%3C/svg%3E');
+
+    // --gradDark: hsl(144, 100%, 89%);
+    // --gradLight: hsl(42, 94%, 76%);
+    // background: linear-gradient(to bottom, var(--gradDark), var(--gradLight));
+
+    dp-ico {
+        margin: .4em;
+        align-self: center;
+    }
+
+    .hint {
+        padding: .4em 3em .8em 0;
+        font-size: .9em;
+        color: rgb(53, 53, 53);
+        align-self: end;
+
+        //background-color: red;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        // .hint-text {
+        //     color: red;
+        // }
+        .hint-site {
+            color: #0d693e;
+        }
+    }
+}
+
+section { //.main section
+    padding: 0 1.2em;
+
+    .title {
+        font-size: 1em;
+        padding: 1em 0;
+    }
+
+    .rows {
+        display: grid;
+        grid-template-columns: minmax(5em, min-content) auto;
+        grid-column-gap: 1em;
+        grid-row-gap: 1.1em;
+        align-items: center;
+        font-size: .9em;
+
+        .input {
+            padding: 0.6em;
+            border-radius: 3px;
+            border: 1px solid #b1b1b1;
+            background: #ffffff80;
+            min-width: 5em; // without this chrome is moving controls out of the box if label is too long
+
+            text-overflow: ellipsis; // to show ... when losing focus
+            overflow: hidden;
+        }
+
+        .input[type=password] {
+            background: darken($main-color, 3);
+            color: gray;
+        }
+    }
+
+    .controls {
+        display: grid;
+        grid-template-columns: auto auto;
+        justify-content: end;
+        grid-gap: 0.6em;
+        margin: 1.2em 0;
+    }
+}
+
+$btn-bcolor: white;
+$btn-tcolor: #1a73e8;
+$btn-border: darken($btn-bcolor, 20%); //#dadce0
+$btn-border-hover: darken($btn-bcolor, 5%);
+
+$btn-primary-bcolor: #4285f4;
+$btn-primary-tcolor: white;
+$btn-primary-border: darken($btn-primary-bcolor, 10%);
+$btn-primary-bcolor-focus: lighten($btn-primary-bcolor, 5%);
+$btn-primary-border-hover: darken($btn-primary-bcolor, 10%);
+
+.btn { //.main section .controls
+    position: relative;
+    cursor: pointer;
+    padding: .7em 1em;
+    min-width: 5.7em;
+    text-align: center;
+    font-weight: bold;
+    font-size: .9em;
+
+    color: $btn-tcolor;
+    background-color: $btn-bcolor;
+    border: 1px solid $btn-border;
+    border-radius: 4px;
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 1px 1px lighten($btn-primary-bcolor, 20%);
+    }
+
+    &:hover {
+        background-color: $btn-border-hover;
+    }
+
+    // &[aria-label] {
+    //     overflow: visible; // this is to override .ripple and show tooltip, but had to remove ripple class
+    // }
+
+    &[aria-label]:hover::after {
+        content: attr(aria-label);
+        position: absolute;
+        padding: .6em;
+        right: 0;
+        top: calc(100% + 1em);
+        min-width: 20em;
+        font-weight: normal;
+        text-align: left;
+        border: 1px solid gray;
+        border-radius: 3px;
+        color: black;
+        background-color: white;
+        box-shadow: 0px 3px 6px #00000040;
+        z-index: 1;
+    }
+}
+
+.btn-primary {
+    color: white;
+    background-color: $btn-primary-bcolor;
+    border-color: $btn-primary-border;
+
+    &:focus {
+        background-color: $btn-primary-bcolor-focus;
+    }
+
+    &:hover {
+        background-color: $btn-primary-border-hover;
+    }
+}
+
+#close { //.main #close
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: .2em .4em;
+    cursor: pointer;
+    outline: none;
+    
+    & > * {
+        pointer-events: none;
+    }
+
+    &:hover, &:focus {
+        background-color: red;
+        border-radius: 0 $main-radius 0 0;
+
+        svg path {
+            fill: white;
+            stroke: #ffd3d3;
+        }
+    }
+}
