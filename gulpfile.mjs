@@ -163,53 +163,91 @@ function collectedToGenerated(cnt) {
     let resMapCss = removeFirstIndent(addIndent(JSON.stringify(cnt.css, null, 4), '    '));
     let resMapDom = removeFirstIndent(addIndent(JSON.stringify(cnt.dom, null, 4), '    '));
 
-    let prolog = removeIndent(`
-            function unbrandWCR(brand) { // WCR - WebCompRes`);
+    let finalJs = js();
+    let finalTs = ts();
 
-    let epilog = removeIndent(`
-            const mapped = {
+    return {
+        js: finalJs,
+        ts: finalTs,
+    };
+
+    function js() {
+        let prolog = removeIndent(`
+            function unbrandWCRjs(brand) { // WCR - WebCompRes`);
+
+        let epilog = getEpilog({ withTypes: false });
+
+        let final = `${prolog}\n    const css = ${resMapCss};\n    const dom = ${resMapDom};${epilog}`;
+        return final;
+    }
+
+    function ts() {
+        let prolog = removeIndent(`
+            export function unbrandWCR(brand: 'dp' | 'hp') { // WCR - Web Component Resources by brand`);
+
+        const types = addIndent(removeIndent(`
+                type DomCss = {
+                    css?: string;
+                    dom?: string;
+                }
+                
+                type DomCss4 = {
+                    ico?: DomCss;
+                    fbm?: DomCss;
+                    fbb?: DomCss;
+                    lit?: DomCss;
+                }
+        `), '    ');
+
+        let epilog = getEpilog({ withTypes: true });
+
+        let final = `${prolog}\n    const css = ${resMapCss};\n    const dom = ${resMapDom};\n${types}${epilog}`;
+        return final;
+    }
+
+    function getEpilog({ withTypes }) {
+        const typ = withTypes ? ': { dp: DomCss4, hp: DomCss4; }' : '';
+        return removeIndent(`
+            const mapped${typ} = {
                 dp: {
                     ico: {
                         css: css.icoDP,
-                        dom: dom.icoDP
+                        dom: dom.icoDP,
                     },
                     lit: {
                         css: css.litDP,
-                        dom: dom.litDP
+                        dom: dom.litDP,
                     },
                     fbm: {
-                        css: css.fbmDP
+                        css: css.fbmDP,
                     },
                     fbb: {
                         css: css.fbbDP,
-                        dom: dom.fbbDP
+                        dom: dom.fbbDP,
                     }
                 },
                 hp: {
                     ico: {
                         css: css.icoDP,
-                        dom: dom.icoHP
+                        dom: dom.icoHP,
                     },
                     lit: {
                         css: css.litDP,
-                        dom: dom.litDP
+                        dom: dom.litDP,
                     },
                     fbm: {
-                        css: css.fbmDP
+                        css: css.fbmDP,
                     },
                     fbb: {
                         css: css.fbbDP,
-                        dom: dom.fbbDP
+                        dom: dom.fbbDP,
                     }
                 }
             };
             return mapped[brand];
         } //unbrandWCR()
     `);
-
-    let final = `${prolog}\n    const css = ${resMapCss};\n    const dom = ${resMapDom};${epilog}`;
-
-    return final;
+    }
 }
 
 function filenameToKey(name) {
@@ -285,12 +323,23 @@ function createDevResourcesTask(done) {
 
     function outTemplates() {
         return gulp.src('.').pipe(through(function transform(file, enc, callback) {
-            let newFile = new File({
-                contents: Buffer.from(prepareFileContent(webComponents)),
+
+            const newContent = prepareFileContent(webComponents);
+
+            let newFileJs = new File({
+                contents: Buffer.from(newContent.js),
                 base: process.cwd(),
                 path: process.cwd() + '/webcomp-res.js'
             });
-            this.push(newFile);
+            this.push(newFileJs);
+
+            let newFileTs = new File({
+                contents: Buffer.from(newContent.ts),
+                base: process.cwd(),
+                path: process.cwd() + '/webcomp-res.ts'
+            });
+            this.push(newFileTs);
+
             callback();
         })).pipe(gulp.dest(srcFolderUi));
 
@@ -304,9 +353,9 @@ function createDevResourcesTask(done) {
                 cnt.dom[key] = quoPck(makeDomi(cnt.svg[key], 'svg'));
             }
             delete cnt.svg;
-    
-            let txt = collectedToGenerated(cnt);
-            return txt;
+
+            const res = collectedToGenerated(cnt);
+            return res;
         }
     }
 
