@@ -1,7 +1,7 @@
 {
     "name": "pm-xtn-csui-res",
-    "private": true,
-    "version": "1.0.0",
+    "private": false,
+    "version": "1.0.1",
     "description": "PM extension content scripts UI resources builder",
     "type": "module",
     "files": [
@@ -17,11 +17,8 @@
         "build:res": "gulp res",
         "predeploy": "yarn build:res"
     },
-    "dependencies": {
-    },
+    "dependencies": {},
     "devDependencies": {
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
         "@types/gulp": "^4.0.13",
         "@types/node": "20.4.3",
         "@types/react": "^18.2.15",
@@ -43,6 +40,8 @@
         "pm-xtn-csui": "^1.0.1",
         "pm-xtn-dom": "1.0.9",
         "postcss": "^8.4.26",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
         "sass": "1.64.0",
         "typescript": "^5.0.2",
         "vite": "^4.4.5"
