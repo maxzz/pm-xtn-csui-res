@@ -43,7 +43,8 @@ const rootDest = './.build';
 const srcRoot = './src/csui-res';
 
 const srcFolderDev = `${srcRoot}/dev`;
-const srcFolderUi = './.build/content-ui';
+const dstGenerated = './dist';
+const devGenerated = './.build';
 const srcFolderAssets = `${srcRoot}/assets`;
 const srcImages = `${srcRoot}/assets/src/images`;
 
@@ -74,148 +75,7 @@ const paths = {
     },
 };
 
-function skipEmptyPipe() {
-    return through(function transform(file, enc, callback) {
-        file.contents.length ? callback(null, file) : callback();
-    });
-}
-
-// Typescript
-
-let tsProject;
-
-function typescriptTask() {
-    if (!tsProject) {
-        tsProject = tsGulp.createProject('tsconfig.components.json');
-    }
-
-    return tsProject
-        .src()
-        .pipe(tsProject())
-        .pipe(gulp.dest(rootDest));
-}
-
-function copyTestHtmlTask() {
-    return gulp
-        .src([`${srcFolderDev}/index.html`])
-        .pipe(traceTaskPipe())
-        .pipe(gulp.dest(srcFolderUi));
-
-    function traceTaskPipe() {
-        return through(function transform(file, enc, callback) {
-            console.log('trace task filename:', file.basename);
-            callback(null, file);
-        });
-    }
-}
-
 // WebComp Dev resources
-
-function collectedToGenerated(cnt) {
-
-    const renameKeys = obj => {
-        const renameKey = key => {
-            let m = /(dp|hp)-(.+)/.exec(key);
-            return `${m[2]}${m[1].toUpperCase()}`;
-        };
-
-        let rv = {};
-        Object.keys(obj).forEach(key => rv[renameKey(key)] = obj[key]);
-        return rv;
-    };
-
-    cnt.css = renameKeys(cnt.css);
-    cnt.dom = renameKeys(cnt.dom);
-
-    let resMapCss = removeFirstIndent(addIndent(JSON.stringify(cnt.css, null, 4), '    '));
-    let resMapDom = removeFirstIndent(addIndent(JSON.stringify(cnt.dom, null, 4), '    '));
-
-    let finalJs = makeJsFileContent();
-    let finalTs = makeTsFileContent();
-
-    return {
-        js: finalJs,
-        ts: finalTs,
-    };
-
-    function makeJsFileContent() {
-        let prolog = removeIndent(`
-            function unbrandWCRjs(brand) { // WCR - WebCompRes`);
-
-        let epilog = getEpilog({ withTypes: false });
-
-        let final = `${prolog}\n    const css = ${resMapCss};\n    const dom = ${resMapDom};${epilog}`;
-        return final;
-    }
-
-    function makeTsFileContent() {
-        let prolog = removeIndent(`
-            export function unbrandWCR(brand: 'dp' | 'hp') { // WCR - Web Component Resources by brand`);
-
-        const types = addIndent(removeIndent(`
-                type DomCss = {
-                    css?: string;
-                    dom?: string;
-                }
-                
-                type DomCss4 = {
-                    ico?: DomCss;
-                    fbm?: DomCss;
-                    fbb?: DomCss;
-                    lit?: DomCss;
-                }
-        `), '    ');
-
-        let epilog = getEpilog({ withTypes: true });
-
-        let final = `${prolog}\n    const css = ${resMapCss};\n    const dom = ${resMapDom};\n${types}${epilog}`;
-        return final;
-    }
-
-    function getEpilog({ withTypes }) {
-        const typ = withTypes ? ': { dp: DomCss4, hp: DomCss4; }' : '';
-        return removeIndent(`
-            const mapped${typ} = {
-                dp: {
-                    ico: {
-                        css: css.icoDP,
-                        dom: dom.icoDP,
-                    },
-                    lit: {
-                        css: css.litDP,
-                        dom: dom.litDP,
-                    },
-                    fbm: {
-                        css: css.fbmDP,
-                    },
-                    fbb: {
-                        css: css.fbbDP,
-                        dom: dom.fbbDP,
-                    }
-                },
-                hp: {
-                    ico: {
-                        css: css.icoDP,
-                        dom: dom.icoHP,
-                    },
-                    lit: {
-                        css: css.litDP,
-                        dom: dom.litDP,
-                    },
-                    fbm: {
-                        css: css.fbmDP,
-                    },
-                    fbb: {
-                        css: css.fbbDP,
-                        dom: dom.fbbDP,
-                    }
-                }
-            };
-            return mapped[brand];
-        } //unbrandWCR()
-    `);
-    }
-}
 
 const webResourceSources = {
     html: [
@@ -240,7 +100,7 @@ const webResourceSources = {
 };
 
 function createDevResourcesTask(done) {
-    const webComponents = {
+    const accWebComponents = {
         dom: {},
         css: {},
         svg: {},
@@ -251,18 +111,19 @@ function createDevResourcesTask(done) {
             gulp.parallel(
                 htmlTemplatesTask,
                 cssTemplatesTask,
-                svgTemplatesTask),
-            outTemplates
+                svgTemplatesTask
+            ),
+            outTemplatesTask,
         )(done);
 
     return tasks;
 
     function htmlTemplatesTask() {
-        webComponents.dom = {};
+        accWebComponents.dom = {};
         return htmlTemplatePipes(webResourceSources.html)
             .pipe(through((file, enc, callback) => {
                 let key = filenameToKey(file.stem);
-                webComponents.dom[key] = file.contents.toString();
+                accWebComponents.dom[key] = file.contents.toString();
                 callback();
             }));
 
@@ -289,11 +150,11 @@ function createDevResourcesTask(done) {
     }
 
     function cssTemplatesTask() {
-        webComponents.css = {};
+        accWebComponents.css = {};
         return scssPipes(webResourceSources.css, noSCSSMaps)
             .pipe(through((file, enc, callback) => {
                 let key = filenameToKey(file.stem);
-                webComponents.css[key] = file.contents.toString();
+                accWebComponents.css[key] = file.contents.toString();
                 callback();
             }));
 
@@ -312,52 +173,14 @@ function createDevResourcesTask(done) {
     }
 
     function svgTemplatesTask() {
-        webComponents.svg = {};
+        accWebComponents.svg = {};
         return gulp
             .src(webResourceSources.svg)
             .pipe(through((file, enc, callback) => {
                 let key = filenameToKey(file.stem);
-                webComponents.svg[key] = file.contents.toString();
+                accWebComponents.svg[key] = file.contents.toString();
                 callback();
             }));
-    }
-
-    function outTemplates() {
-        return gulp.src('.').pipe(through(function transform(file, enc, callback) {
-
-            const newContent = prepareFileContent(webComponents);
-
-            let newFileJs = new File({
-                contents: Buffer.from(newContent.js),
-                base: process.cwd(),
-                path: process.cwd() + '/webcomp-res.js'
-            });
-            this.push(newFileJs);
-
-            let newFileTs = new File({
-                contents: Buffer.from(newContent.ts),
-                base: process.cwd(),
-                path: process.cwd() + '/webcomp-res.ts'
-            });
-            this.push(newFileTs);
-
-            callback();
-        })).pipe(gulp.dest(srcFolderUi));
-
-        function prepareFileContent(cnt) {
-            // 1. html
-            for (let key of Object.keys(cnt.dom)) {
-                cnt.dom[key] = quoPck(makeDomi(cnt.dom[key], 'body'));
-            }
-            // 2. svg
-            for (let key of Object.keys(cnt.svg)) {
-                cnt.dom[key] = quoPck(makeDomi(cnt.svg[key], 'svg'));
-            }
-            delete cnt.svg;
-
-            const res = collectedToGenerated(cnt);
-            return res;
-        }
     }
 
     function filenameToKey(name) {
@@ -365,11 +188,199 @@ function createDevResourcesTask(done) {
         if (m) {
             return m[0];
         }
+
         m = /logo-4-domi-(dp|hp)/.exec(name);
         if (m) {
             return `${m[1]}-ico`;
         }
+
         return name;
+    }
+
+    function outTemplatesTask() {
+        return gulp.src('.').pipe(through(function transform(file, enc, callback) {
+
+            const newContent = prepareFileContent(accWebComponents);
+
+            const outBase = process.cwd();
+            //console.log('---------------------------outBase', outBase);
+
+            let newFileJs = new File({
+                contents: Buffer.from(newContent.js),
+                base: outBase,
+                path: outBase + '/webcomp-res.js'
+            });
+            this.push(newFileJs);
+
+            let newFileTs = new File({
+                contents: Buffer.from(newContent.ts),
+                base: outBase,
+                path: outBase + '/webcomp-res.ts'
+            });
+            this.push(newFileTs);
+
+            callback();
+        })).pipe(gulp.dest(dstGenerated));
+
+        function prepareFileContent(allWebComponents) {
+            // 1. html
+            for (let key of Object.keys(allWebComponents.dom)) {
+                allWebComponents.dom[key] = quoPck(makeDomi(allWebComponents.dom[key], 'body'));
+            }
+
+            // 2. svg
+            for (let key of Object.keys(allWebComponents.svg)) {
+                allWebComponents.dom[key] = quoPck(makeDomi(allWebComponents.svg[key], 'svg'));
+            }
+            delete allWebComponents.svg;
+
+            const res = collectedToGenerated(allWebComponents);
+            return res;
+        }
+
+        function collectedToGenerated(allWebComponents) {
+
+            allWebComponents.css = renameKeys(allWebComponents.css);
+            allWebComponents.dom = renameKeys(allWebComponents.dom);
+
+            let partCss = removeFirstIndent(addIndent(JSON.stringify(allWebComponents.css, null, 4), '    '));
+            let partDom = removeFirstIndent(addIndent(JSON.stringify(allWebComponents.dom, null, 4), '    '));
+
+            return {
+                js: makeJsFileContent(partCss, partDom),
+                ts: makeTsFileContent(partCss, partDom),
+            };
+
+            function renameKeys(obj) {
+                function renameKey(key) {
+                    const m = /(dp|hp)-(.+)/.exec(key);
+                    return `${m[2]}${m[1].toUpperCase()}`;
+                }
+
+                const rv = {};
+                Object.keys(obj).forEach((key) => rv[renameKey(key)] = obj[key]);
+                return rv;
+            }
+
+            function makeJsFileContent(strCss, strDom) {
+                let prolog = removeIndent(`
+                    function unbrandWCRjs(brand) { // WCR - Web Component Resources by brand`);
+
+                let epilog = getEpilog({ withTypes: false });
+
+                let final = `${prolog}\n\n    const css = ${strCss};\n\n    const dom = ${strDom};\n${epilog}`;
+                return final;
+            }
+
+            function makeTsFileContent(strCss, strDom) {
+                let prolog = removeIndent(`
+                    export function unbrandWCR(brand: 'dp' | 'hp') { // WCR - Web Component Resources by brand`);
+
+                const types = addIndent(removeIndent(`
+                        type DomCss = {
+                            css?: string;
+                            dom?: string;
+                        };
+                        
+                        type DomCss4 = {
+                            ico?: DomCss;
+                            fbm?: DomCss;
+                            fbb?: DomCss;
+                            lit?: DomCss;
+                        };
+                    `
+                ), '    ');
+
+                let epilog = getEpilog({ withTypes: true });
+
+                let final = `${prolog}\n\n    const css = ${strCss};\n\n    const dom = ${strDom};\n${types}${epilog}`;
+                return final;
+            }
+
+            function getEpilog({ withTypes }) {
+                const typ = withTypes ? ': { dp: DomCss4, hp: DomCss4; }' : '';
+                return removeIndent(`
+                        const mapped${typ} = {
+                            dp: {
+                                ico: {
+                                    css: css.icoDP,
+                                    dom: dom.icoDP,
+                                },
+                                lit: {
+                                    css: css.litDP,
+                                    dom: dom.litDP,
+                                },
+                                fbm: {
+                                    css: css.fbmDP,
+                                },
+                                fbb: {
+                                    css: css.fbbDP,
+                                    dom: dom.fbbDP,
+                                }
+                            },
+                            hp: {
+                                ico: {
+                                    css: css.icoDP,
+                                    dom: dom.icoHP,
+                                },
+                                lit: {
+                                    css: css.litDP,
+                                    dom: dom.litDP,
+                                },
+                                fbm: {
+                                    css: css.fbmDP,
+                                },
+                                fbb: {
+                                    css: css.fbbDP,
+                                    dom: dom.fbbDP,
+                                }
+                            }
+                        };
+
+                        return mapped[brand];
+                    } //unbrandWCR()
+                `
+                );
+            }
+
+        } //collectedToGenerated()
+
+    } //outTemplatesTask()
+
+} //createDevResourcesTask()
+
+function skipEmptyPipe() {
+    return through(function transform(file, enc, callback) {
+        file.contents.length ? callback(null, file) : callback();
+    });
+}
+
+// Typescript
+
+let tsProject;
+
+function typescriptTask() {
+    if (!tsProject) {
+        tsProject = tsGulp.createProject('tsconfig.components.json');
+    }
+
+    return tsProject
+        .src()
+        .pipe(tsProject())
+        .pipe(gulp.dest(rootDest));
+}
+
+function copyTestHtmlTask() {
+    return gulp
+        .src([`${srcFolderDev}/index.html`])
+        .pipe(traceTaskPipe())
+        .pipe(gulp.dest(devGenerated));
+
+    function traceTaskPipe() {
+        return through(function transform(file, enc, callback) {
+            console.log('trace task filename:', file.basename);
+            callback(null, file);
+        });
     }
 }
 
@@ -402,7 +413,8 @@ function watchTask() {
             `${srcFolderAssets}/css/*.scss`,
             `${srcFolderAssets}/html/*.html`,
             `${dstServerBuild}/**/*.js`,
-            `!${srcFolderUi}/webcomp-res.js`,
+            `!${dstGenerated}/webcomp-res.ts`,
+            `!${dstGenerated}/webcomp-res.js`,
         ],
         gulp.series(createDevResourcesTask, reloadTask)
     );

@@ -4,18 +4,24 @@
     "version": "1.0.0",
     "description": "PM extension content scripts UI resources builder",
     "type": "module",
+    "files": [
+        "./dist/webcomp-res.js",
+        "./dist/webcomp-res.ts"
+    ],
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "w": "gulp",
-        "g": "gulp res"
+        "g": "gulp res",
+        "build:res": "gulp res",
+        "predeploy": "yarn build:res"
     },
     "dependencies": {
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
     },
     "devDependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
         "@types/gulp": "^4.0.13",
         "@types/node": "20.4.3",
         "@types/react": "^18.2.15",
