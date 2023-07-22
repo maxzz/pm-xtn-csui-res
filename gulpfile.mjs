@@ -74,72 +74,39 @@ const paths = {
     },
 };
 
-// Typescript
-
-let tsProject;
-
-function typescriptTask() {
-    !tsProject && (tsProject = tsGulp.createProject('tsconfig.components.json'));
-    return tsProject
-        .src()
-        .pipe(tsProject())
-        .pipe(gulp.dest(rootDest));
-}
-
 function skipEmptyPipe() {
     return through(function transform(file, enc, callback) {
         file.contents.length ? callback(null, file) : callback();
     });
 }
 
-function traceTaskPipe() {
-    return through(function transform(file, enc, callback) {
-        console.log('trace task filename:', file.basename);
-        callback(null, file);
-    });
-}
+// Typescript
 
-// SASS, HTML template pipes
+let tsProject;
 
-function scssPipes(src, noMaps = true) {
-    return gulp
-        .src(src)
-        .pipe(noMaps ? through() : sourcemaps.init())
-        .pipe(sass())
-        .pipe(postcss([
-            autoprefixer({ overrideBrowserslist: ['last 3 Chrome versions', 'last 4 Firefox versions'] }),
-            cssnano({ zindex: false }) // OK 'reduceIdents: false' but animation is not included //, discardUnused: false, reduceIdents: false
-        ]))
-        .pipe(noMaps ? through() : sourcemaps.write('.'))
-        .pipe(skipEmptyPipe());
-}
-
-function htmlTemplatePipes(src) {
-    function getTemplateBody() {
-        return through(function transform(file, enc, callback) {
-            let cnt = file.contents.toString();
-
-            let $ = cheerio.load(cnt);
-            let txt = $('.web-component').html();
-            txt = txt.replace(/^[\r\n]/, '');
-            txt = removeIndent(txt);
-            txt = htmlMinifier(txt, { removeAttributeQuotes: true, collapseWhitespace: true, removeComments: true });
-            file.contents = Buffer.from(txt);
-
-            callback(null, file);
-        });
+function typescriptTask() {
+    if (!tsProject) {
+        tsProject = tsGulp.createProject('tsconfig.components.json');
     }
-    return gulp
-        .src(src)
-        .pipe(getTemplateBody())
-        .pipe(skipEmptyPipe());
+
+    return tsProject
+        .src()
+        .pipe(tsProject())
+        .pipe(gulp.dest(rootDest));
 }
 
-function copyTestHtml() {
+function copyTestHtmlTask() {
     return gulp
         .src([`${srcFolderDev}/index.html`])
         .pipe(traceTaskPipe())
         .pipe(gulp.dest(srcFolderUi));
+
+    function traceTaskPipe() {
+        return through(function transform(file, enc, callback) {
+            console.log('trace task filename:', file.basename);
+            callback(null, file);
+        });
+    }
 }
 
 // WebComp Dev resources
@@ -163,15 +130,15 @@ function collectedToGenerated(cnt) {
     let resMapCss = removeFirstIndent(addIndent(JSON.stringify(cnt.css, null, 4), '    '));
     let resMapDom = removeFirstIndent(addIndent(JSON.stringify(cnt.dom, null, 4), '    '));
 
-    let finalJs = js();
-    let finalTs = ts();
+    let finalJs = makeJsFileContent();
+    let finalTs = makeTsFileContent();
 
     return {
         js: finalJs,
         ts: finalTs,
     };
 
-    function js() {
+    function makeJsFileContent() {
         let prolog = removeIndent(`
             function unbrandWCRjs(brand) { // WCR - WebCompRes`);
 
@@ -181,7 +148,7 @@ function collectedToGenerated(cnt) {
         return final;
     }
 
-    function ts() {
+    function makeTsFileContent() {
         let prolog = removeIndent(`
             export function unbrandWCR(brand: 'dp' | 'hp') { // WCR - Web Component Resources by brand`);
 
@@ -250,19 +217,7 @@ function collectedToGenerated(cnt) {
     }
 }
 
-function filenameToKey(name) {
-    let m = /(dp-(?:fbi|fbb|fbm|ico|lit))/.exec(name);
-    if (m) {
-        return m[0];
-    }
-    m = /logo-4-domi-(dp|hp)/.exec(name);
-    if (m) {
-        return `${m[1]}-ico`;
-    }
-    return name;
-}
-
-const sources = {
+const webResourceSources = {
     html: [
         `${srcFolderAssets}/html/template-dp-fbb.html`,
         `${srcFolderAssets}/html/template-dp-fbi.html`,
@@ -291,29 +246,75 @@ function createDevResourcesTask(done) {
         svg: {},
     };
 
-    function htmlTemplates() {
+    const tasks =
+        gulp.series(
+            gulp.parallel(
+                htmlTemplatesTask,
+                cssTemplatesTask,
+                svgTemplatesTask),
+            outTemplates
+        )(done);
+
+    return tasks;
+
+    function htmlTemplatesTask() {
         webComponents.dom = {};
-        return htmlTemplatePipes(sources.html)
+        return htmlTemplatePipes(webResourceSources.html)
             .pipe(through((file, enc, callback) => {
                 let key = filenameToKey(file.stem);
                 webComponents.dom[key] = file.contents.toString();
                 callback();
             }));
+
+        function htmlTemplatePipes(src) {
+            function getTemplateBody() {
+                return through(function transform(file, enc, callback) {
+                    let cnt = file.contents.toString();
+
+                    let $ = cheerio.load(cnt);
+                    let txt = $('.web-component').html();
+                    txt = txt.replace(/^[\r\n]/, '');
+                    txt = removeIndent(txt);
+                    txt = htmlMinifier(txt, { removeAttributeQuotes: true, collapseWhitespace: true, removeComments: true });
+                    file.contents = Buffer.from(txt);
+
+                    callback(null, file);
+                });
+            }
+            return gulp
+                .src(src)
+                .pipe(getTemplateBody())
+                .pipe(skipEmptyPipe());
+        }
     }
 
-    function cssTemplates() {
+    function cssTemplatesTask() {
         webComponents.css = {};
-        return scssPipes(sources.css, noSCSSMaps)
+        return scssPipes(webResourceSources.css, noSCSSMaps)
             .pipe(through((file, enc, callback) => {
                 let key = filenameToKey(file.stem);
                 webComponents.css[key] = file.contents.toString();
                 callback();
             }));
+
+        function scssPipes(src, noMaps = true) {
+            return gulp
+                .src(src)
+                .pipe(noMaps ? through() : sourcemaps.init())
+                .pipe(sass())
+                .pipe(postcss([
+                    autoprefixer({ overrideBrowserslist: ['last 3 Chrome versions', 'last 4 Firefox versions'] }),
+                    cssnano({ zindex: false }) // OK 'reduceIdents: false' but animation is not included //, discardUnused: false, reduceIdents: false
+                ]))
+                .pipe(noMaps ? through() : sourcemaps.write('.'))
+                .pipe(skipEmptyPipe());
+        }
     }
 
-    function svgTemplates() {
+    function svgTemplatesTask() {
         webComponents.svg = {};
-        return gulp.src(sources.svg)
+        return gulp
+            .src(webResourceSources.svg)
             .pipe(through((file, enc, callback) => {
                 let key = filenameToKey(file.stem);
                 webComponents.svg[key] = file.contents.toString();
@@ -359,7 +360,17 @@ function createDevResourcesTask(done) {
         }
     }
 
-    return gulp.series(gulp.parallel(htmlTemplates, cssTemplates, svgTemplates), outTemplates)(done);
+    function filenameToKey(name) {
+        let m = /(dp-(?:fbi|fbb|fbm|ico|lit))/.exec(name);
+        if (m) {
+            return m[0];
+        }
+        m = /logo-4-domi-(dp|hp)/.exec(name);
+        if (m) {
+            return `${m[1]}-ico`;
+        }
+        return name;
+    }
 }
 
 // Reload
@@ -369,7 +380,7 @@ function reloadTask(done) {
     done();
 }
 
-function watch() {
+function watchTask() {
     sync.init({
         server: {
             baseDir: './.build',
@@ -383,7 +394,7 @@ function watch() {
         [
             `${srcFolderDev}/*.html`,
         ],
-        gulp.series(copyTestHtml, reloadTask)
+        gulp.series(copyTestHtmlTask, reloadTask)
     );
 
     gulp.watch(
@@ -397,16 +408,8 @@ function watch() {
     );
 }
 
-// Exports for extension build
-
-// exports.ts = typescriptTask;
-// exports.copy = copyTestHtml;
-// exports.res = (done) => createDevResourcesTask(done);
-// exports.build = (done) => gulp.series(createDevResourcesTask, copyTestHtml)(done);
-// exports.default = (done) => gulp.series(createDevResourcesTask, copyTestHtml, watch)(done);
-
 export const ts = typescriptTask;
-export const copy = copyTestHtml;
+export const copy = copyTestHtmlTask;
 export const res = (done) => createDevResourcesTask(done);
-export const build = (done) => gulp.series(createDevResourcesTask, copyTestHtml)(done);
-export default (done) => gulp.series(createDevResourcesTask, copyTestHtml, watch)(done);
+export const build = (done) => gulp.series(createDevResourcesTask, copyTestHtmlTask)(done);
+export default (done) => gulp.series(createDevResourcesTask, copyTestHtmlTask, watchTask)(done);
