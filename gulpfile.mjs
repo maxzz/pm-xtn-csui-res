@@ -33,14 +33,14 @@ import cheerio from 'cheerio';
 import htmlMinifierModule from 'html-minifier';
 const htmlMinifier = htmlMinifierModule.minify;
 
-import { makeDomi } from './.dist-tsc/utils/vdom-server-language.js';
+import { quoPck, makeDomi, removeIndent, removeFirstIndent, addIndent } from 'pm-xtn-dom';
 //const { makeDomi } = require('./.build/js/content-ui/dev/dom-language.js');
 
 const isProduction = args.type === 'production';
 const noSCSSMaps = true;
 
 const rootDest = './.build';
-const srcRoot = './src/content-ui';
+const srcRoot = './src/csui-res';
 
 const srcFolderDev = `${srcRoot}/dev`;
 const srcFolderUi = './.build/content-ui';
@@ -73,32 +73,6 @@ const paths = {
         //dest: './.build',
     },
 };
-
-function removeIndent(src, all) {
-    // 1. if defined all then remove all indentation from each line
-    if (all) {
-        return src.replace(/^[^\S\n]+/gm, '');
-    }
-
-    // 2. remove the shortest leading indentation from each line
-    const match = src.match(/^[^\S\n]*(?=\S)/gm);
-    const indent = match && Math.min(...match.map(el => el.length));
-    if (indent) {
-        const regexp = new RegExp(`^.{${indent}}`, 'gm');
-        return src.replace(regexp, '');
-    }
-    return src;
-}
-
-function addIndent(src, indent) {
-    return src.replace(/^([^\S\n]*)/gm, function (match, p1) {
-        return indent + p1;
-    });
-}
-
-function removeFirstIndent(src) {
-    return src.replace(/^[^\S]+/, '');
-}
 
 // Typescript
 
@@ -272,15 +246,6 @@ const sources = {
     ],
 };
 
-function quoPck(src) {
-    // 0. If has single quotas return as it is, otherwise replace " to ' and add {~} as prefix.
-    return /'/.test(src) ? src : `{~}${src.replace(/"/g, '\'')}`;
-}
-function quoUnp(src) {
-    // 0 Unpack quotas: remove {~} prefix and return back double quotas.
-    return /^{~}/.test(src) ? src.slice(3).replace(/'/g, '"') : src;
-}
-
 function createDevResourcesTask(done) {
     const webComponents = {
         dom: {},
@@ -318,21 +283,6 @@ function createDevResourcesTask(done) {
             }));
     }
 
-    function prepareFileContent(cnt) {
-        // 1. html
-        for (let key of Object.keys(cnt.dom)) {
-            cnt.dom[key] = quoPck(makeDomi(cnt.dom[key], 'body'));
-        }
-        // 2. svg
-        for (let key of Object.keys(cnt.svg)) {
-            cnt.dom[key] = quoPck(makeDomi(cnt.svg[key], 'svg'));
-        }
-        delete cnt.svg;
-
-        let txt = collectedToGenerated(cnt);
-        return txt;
-    }
-
     function outTemplates() {
         return gulp.src('.').pipe(through(function transform(file, enc, callback) {
             let newFile = new File({
@@ -343,6 +293,21 @@ function createDevResourcesTask(done) {
             this.push(newFile);
             callback();
         })).pipe(gulp.dest(srcFolderUi));
+
+        function prepareFileContent(cnt) {
+            // 1. html
+            for (let key of Object.keys(cnt.dom)) {
+                cnt.dom[key] = quoPck(makeDomi(cnt.dom[key], 'body'));
+            }
+            // 2. svg
+            for (let key of Object.keys(cnt.svg)) {
+                cnt.dom[key] = quoPck(makeDomi(cnt.svg[key], 'svg'));
+            }
+            delete cnt.svg;
+    
+            let txt = collectedToGenerated(cnt);
+            return txt;
+        }
     }
 
     return gulp.series(gulp.parallel(htmlTemplates, cssTemplates, svgTemplates), outTemplates)(done);
@@ -396,74 +361,3 @@ export const copy = copyTestHtml;
 export const res = (done) => createDevResourcesTask(done);
 export const build = (done) => gulp.series(createDevResourcesTask, copyTestHtml)(done);
 export default (done) => gulp.series(createDevResourcesTask, copyTestHtml, watch)(done);
-
-//#region Test Server
-
-function srv_copyHtml() {
-    return gulp
-        .src([`${srcServer}/public/index.html`])
-        .pipe(traceTaskPipe())
-        .pipe(gulp.dest(`${dstServer}`));
-}
-
-function srv_copySass() {
-    return scssPipes(`${srcServer}/public/*.scss`, noSCSSMaps)
-        .pipe(traceTaskPipe())
-        .pipe(gulp.dest(`${dstServer}`));
-}
-
-function srv_static() {
-    return gulp
-        .src([
-            `${srcServer}/public/thirdparties/vue.js`,
-            `${srcServer}/public/thirdparties/vue-composition-api.umd.js`,
-        ])
-        .pipe(traceTaskPipe())
-        .pipe(gulp.dest(`${dstServer}/thirdparties`));
-}
-
-function srv_staticB() {
-    return gulp
-        .src([`${srcServer}/public/favicon.png`])
-        .pipe(traceTaskPipe())
-        .pipe(gulp.dest(`${dstServer}`));
-}
-
-function srv_watch() {
-    sync.init({
-        server: {
-            baseDir: `${dstServer}`,
-            index: 'index.html'
-        },
-        notify: false,
-        browser: paths.sync.browser
-    });
-
-    gulp.watch(
-        [
-            `${srcServer}/public/*.html`,
-        ],
-        gulp.series(srv_copyHtml, reloadTask)
-    );
-
-    gulp.watch(
-        [
-            `${srcServer}/**/*.scss`,
-        ],
-        gulp.series(srv_copySass, reloadTask)
-    );
-
-    gulp.watch(
-        [
-            `${dstServer}/*.js`, // but not thirdparties (i.e. wo/ vue.js, and composition API). tsc -w will produce js from ts
-        ],
-        gulp.series(reloadTask)
-    );
-}
-
-//#endregion Test Server
-
-// Exports for test-server build
-
-// exports.testServer = (done) => gulp.series(srv_static, srv_staticB, srv_copySass, srv_copyHtml, srv_watch)(done);
-export const testServer = (done) => gulp.series(srv_static, srv_staticB, srv_copySass, srv_copyHtml, srv_watch)(done);
