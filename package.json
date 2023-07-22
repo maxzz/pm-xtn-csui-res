@@ -3,6 +3,7 @@
     "private": false,
     "version": "1.0.2",
     "description": "PM extension content scripts UI resources builder",
+    "license": "MIT",
     "type": "module",
     "files": [
         "dist/webcomp-res.js",
