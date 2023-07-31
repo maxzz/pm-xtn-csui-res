@@ -1,7 +1,7 @@
 {
     "name": "pm-xtn-csui-res",
     "private": false,
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "PM extension content scripts UI resources builder",
     "license": "MIT",
     "author": "Max Zakharzhevskiy <maxzz@msn.com>",
@@ -46,9 +46,9 @@
         "dist/webcomp-res.ts"
     ],
     "type": "module",
-    "types": "dist/webcomp-res.ts",
-    "import": "dist/webcomp-res.js",
-    "module": "dist/webcomp-res.ts",
+    "types": "./dist/webcomp-res.ts",
+    "import": "./dist/webcomp-res.js",
+    "module": "./dist/webcomp-res.ts",
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
