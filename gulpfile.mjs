@@ -264,7 +264,7 @@ function createDevResourcesTask(done) {
 
             function makeJsFileContent(strCss, strDom) {
                 let prolog = removeIndent(`
-                    function unbrandWCRjs(brand) { // WCR - Web Component Resources by brand`);
+                    export function unbrandWCR(brand) { // WCR - Web Component Resources by brand`);
 
                 let epilog = getEpilog({ withTypes: false });
 

@@ -4,25 +4,17 @@
     "version": "1.0.2",
     "description": "PM extension content scripts UI resources builder",
     "license": "MIT",
-    "type": "module",
-    "files": [
-        "dist/webcomp-res.js",
-        "dist/webcomp-res.ts"
-    ],
-    "scripts": {
-        "dev": "vite",
-        "build": "tsc && vite build",
-        "preview": "vite preview",
-        "w": "gulp",
-        "g": "gulp res",
-        "build:res": "gulp res",
-        "predeploy": "yarn build:res"
+    "author": "Max Zakharzhevskiy <maxzz@msn.com>",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/maxzz/pm-xtn-csui-res.git"
     },
+    "homepage": "https://github.com/maxzz/pm-xtn-csui-res",
     "dependencies": {},
     "devDependencies": {
         "@types/gulp": "^4.0.13",
-        "@types/node": "20.4.3",
-        "@types/react": "^18.2.15",
+        "@types/node": "20.4.5",
+        "@types/react": "18.2.17",
         "@types/react-dom": "^18.2.7",
         "@types/through2": "^2.0.38",
         "@vitejs/plugin-react": "^4.0.3",
@@ -38,13 +30,32 @@
         "gulp-typescript": "^6.0.0-alpha.1",
         "html-minifier": "^4.0.0",
         "minimist": "^1.2.8",
-        "pm-xtn-csui": "^1.0.1",
-        "pm-xtn-dom": "1.0.9",
         "postcss": "^8.4.26",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "sass": "1.64.0",
+        "sass": "1.64.1",
         "typescript": "^5.0.2",
-        "vite": "^4.4.5"
+        "vite": "4.4.7"
+    },
+    "peerDependencies": {
+        "pm-xtn-csui": "^1.0.2",
+        "pm-xtn-dom": "^1.0.14"
+    },
+    "files": [
+        "dist/webcomp-res.js",
+        "dist/webcomp-res.ts"
+    ],
+    "type": "module",
+    "types": "dist/webcomp-res.ts",
+    "import": "dist/webcomp-res.js",
+    "module": "dist/webcomp-res.ts",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "w": "gulp",
+        "g": "gulp res",
+        "build:res": "gulp res",
+        "predeploy": "yarn build:res"
     }
 }
