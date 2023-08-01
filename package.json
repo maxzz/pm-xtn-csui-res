@@ -1,7 +1,7 @@
 {
     "name": "pm-xtn-csui-res",
     "private": false,
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "PM extension content scripts UI resources builder",
     "license": "MIT",
     "author": "Max Zakharzhevskiy <maxzz@msn.com>",
@@ -30,17 +30,16 @@
         "gulp-typescript": "^6.0.0-alpha.1",
         "html-minifier": "^4.0.0",
         "minimist": "^1.2.8",
-        "postcss": "^8.4.26",
         "pm-xtn-csui": "*",
         "pm-xtn-dom": "*",
+        "postcss": "^8.4.26",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "sass": "1.64.1",
         "typescript": "^5.0.2",
         "vite": "4.4.7"
     },
-    "peerDependencies": {
-    },
+    "peerDependencies": {},
     "files": [
         "dist/webcomp-res.js",
         "dist/webcomp-res.ts"
