@@ -423,7 +423,7 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.4.2.tgz#129cc9ae69f93824f92fac653eebfb4812ab4af9"
   integrity sha512-Dd0BYtWgnWJKwO1jkmTrzofjK2QXXcai0dmtzvIBhcA+RsG5h8R3xlyta0kGOZRNfL9GuRtb1knmPEhQrePCEw==
 
-"@types/node@20.4.5", "@types/node@^20.4.2":
+"@types/node@20.4.5":
   version "20.4.5"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.4.5.tgz#9dc0a5cb1ccce4f7a731660935ab70b9c00a5d69"
   integrity sha512-rt40Nk13II9JwQBdeYqmbn2Q6IVTA5uPhvSO+JVqdXw/6/4glI6oR9ezty/A9Hg5u7JH4OmYmuQ+XvjKm0Datg==
@@ -3268,18 +3268,15 @@ plugin-error@^1.0.1:
     arr-union "^3.1.0"
     extend-shallow "^3.0.2"
 
-pm-xtn-csui@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/pm-xtn-csui/-/pm-xtn-csui-1.0.2.tgz#4e97c848805ae6fb7845b84e9f7a6e396791bdeb"
-  integrity sha512-at1cQ8dmQ6szlOaOlanqQT9Io5Ei6OWmNW/7UzPeJpt6Yj1ZtRKcc8LOBBr2AIScjxOVdfRntJ+ONuYhUKUPcA==
-  dependencies:
-    "@types/node" "^20.4.2"
-    pm-xtn-dom "^1.0.5"
+pm-xtn-csui@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/pm-xtn-csui/-/pm-xtn-csui-1.0.5.tgz#180d8ebce90a10a62b1c77b21ad7d583c646cacd"
+  integrity sha512-zcszFFq0Xff+KLK+78hRnKftxaWrCsiPCSRp2vi+Ejk/mFl+2fk/nSwFHoLf72BFnVy9Rw4TZrxy6sfDB6zQ4w==
 
-pm-xtn-dom@^1.0.5:
-  version "1.0.14"
-  resolved "https://registry.yarnpkg.com/pm-xtn-dom/-/pm-xtn-dom-1.0.14.tgz#18650bad08b1e97959c1c067a79b3ff83a8913eb"
-  integrity sha512-2yinMI+lA2iSzicsWZWwuQ4c1s3eg+6VYVK0TRZPFZnAWRXCXElRS5t+9cGh7uCwnRXRV9LS4rfFSAZYp7bddw==
+pm-xtn-dom@1.0.15:
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/pm-xtn-dom/-/pm-xtn-dom-1.0.15.tgz#e580f902307eed5f31c55d3a4dccedee4786eb8a"
+  integrity sha512-GlBajroZbd74xuzIKqmYNO76K9VDU3fNxwG/EFKjHzWs/tgh/lYJjavlQtNef9pb4bC4q9MKKlOzRweRhccgxA==
 
 portscanner@2.2.0:
   version "2.2.0"
