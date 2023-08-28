@@ -1,7 +1,7 @@
 
 import { APIMSG_I2Cs_IMenuUID, CsResMenus, DomCss4 } from "pm-xtn-csui";
 import { NR, IBgIconAccount } from "./copy-of-types";
-import { IDomiArray, quoUnp } from "pm-xtn-dom";
+import { IDomiArray, quoUnp } from "pm-xtn-dom/es6";
 
 //declare var webComps: { "html": {}, "css": {}, "svg": {} };
 

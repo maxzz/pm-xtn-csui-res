@@ -1,7 +1,7 @@
 import { csResVars } from "./copy-of-vars-cs-res-def";
 import { IBgResShiled } from "./copy-of-types";
 import { DpIco, DpFbi, DpFbm, DpLit, HTMLElementMax, FbbIn, FbbRes, DpFbb, FbbEventType, FbbEvent, FBIType, icoUtl } from "pm-xtn-csui";
-import { formatWith } from "pm-xtn-dom";
+import { formatWith } from "pm-xtn-dom/es6";
 import { unbrandWCR_Unpacked } from "./dev-components-test-res";
 
 type WCInstances = {

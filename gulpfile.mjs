@@ -1,18 +1,15 @@
-//const path = require('path');
+// @ts-check
 import gulp from 'gulp';
 
 import { obj as through } from 'through2';
-//const through = require('through2').obj;
 
 import File from 'vinyl';
 
 import minimist from 'minimist';
 const args = minimist(process.argv.slice(2));
-//const args = require('minimist')(process.argv.slice(2));
 
 import browserSyncModule from 'browser-sync';
 const sync = browserSyncModule.create();
-// const sync = require('browser-sync').create();
 
 import sourcemaps from 'gulp-sourcemaps';
 
@@ -21,7 +18,6 @@ import sourcemaps from 'gulp-sourcemaps';
 import gulpSassModule from 'gulp-sass'; // compiles SCSS to CSS
 import * as sassModule from 'sass';
 const sass = gulpSassModule(sassModule);
-//const sass = require('gulp-sass')(require('sass')); // compiles SCSS to CSS
 
 import postcss from 'gulp-postcss'; // runs autoprefixer and cssnano
 import autoprefixer from 'autoprefixer'; //adds vendor prefixes to CSS
@@ -33,8 +29,8 @@ import cheerio from 'cheerio';
 import htmlMinifierModule from 'html-minifier';
 const htmlMinifier = htmlMinifierModule.minify;
 
-import { quoPck, makeDomi, removeIndent, removeFirstIndent, addIndent } from 'pm-xtn-dom';
-//const { makeDomi } = require('./.build/js/content-ui/dev/dom-language.js');
+import { quoPck, removeIndent, removeFirstIndent, addIndent } from 'pm-xtn-dom/es6';
+import { makeDomi } from 'pm-xtn-dom/builder';
 
 const isProduction = args.type === 'production';
 const noSCSSMaps = true;
@@ -133,9 +129,12 @@ function createDevResourcesTask(done) {
                     let cnt = file.contents.toString();
 
                     let $ = cheerio.load(cnt);
-                    let txt = $('.web-component').html();
+                    let txt = $('.web-component').html() || '';
+                    // if (!txt) {
+                    //     throw new Error('No .web-component html element found in ' + file.path);
+                    // }
                     txt = txt.replace(/^[\r\n]/, '');
-                    txt = removeIndent(txt);
+                    txt = removeIndent(txt, false);
                     txt = htmlMinifier(txt, { removeAttributeQuotes: true, collapseWhitespace: true, removeComments: true });
                     file.contents = Buffer.from(txt);
 
@@ -165,7 +164,8 @@ function createDevResourcesTask(done) {
                 .pipe(sass())
                 .pipe(postcss([
                     autoprefixer({ overrideBrowserslist: ['last 3 Chrome versions', 'last 4 Firefox versions'] }),
-                    cssnano({ zindex: false }) // OK 'reduceIdents: false' but animation is not included //, discardUnused: false, reduceIdents: false
+                    //cssnano({ zindex: false }) // OK 'reduceIdents: false' but animation is not included //, discardUnused: false, reduceIdents: false
+                    cssnano()
                 ]))
                 .pipe(noMaps ? through() : sourcemaps.write('.'))
                 .pipe(skipEmptyPipe());
@@ -254,6 +254,9 @@ function createDevResourcesTask(done) {
             function renameKeys(obj) {
                 function renameKey(key) {
                     const m = /(dp|hp)-(.+)/.exec(key);
+                    if (!m){
+                        throw new Error('Invalid key: ' + key);
+                    }
                     return `${m[2]}${m[1].toUpperCase()}`;
                 }
 
@@ -264,7 +267,7 @@ function createDevResourcesTask(done) {
 
             function makeJsFileContent(strCss, strDom) {
                 let prolog = removeIndent(`
-                    export function unbrandWCR(brand) { // WCR - Web Component Resources by brand`);
+                    export function unbrandWCR(brand) { // WCR - Web Component Resources by brand`, false);
 
                 let epilog = getEpilog({ withTypes: false });
 
@@ -274,7 +277,7 @@ function createDevResourcesTask(done) {
 
             function makeTsFileContent(strCss, strDom) {
                 let prolog = removeIndent(`
-                    export function unbrandWCR(brand: 'dp' | 'hp') { // WCR - Web Component Resources by brand`);
+                    export function unbrandWCR(brand: 'dp' | 'hp') { // WCR - Web Component Resources by brand`, false);
 
                 const types = addIndent(removeIndent(`
                         type DomCss = {
@@ -288,7 +291,7 @@ function createDevResourcesTask(done) {
                             fbb?: DomCss;
                             lit?: DomCss;
                         };
-                    `
+                    `, false
                 ), '    ');
 
                 let epilog = getEpilog({ withTypes: true });
@@ -339,7 +342,7 @@ function createDevResourcesTask(done) {
 
                         return mapped[brand];
                     } //unbrandWCR()
-                `
+                `, false
                 );
             }
 
