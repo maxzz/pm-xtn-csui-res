@@ -1,7 +1,7 @@
 {
     "name": "pm-xtn-csui-res",
     "private": false,
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "PM extension content scripts UI resources builder",
     "license": "MIT",
     "author": "Max Zakharzhevskiy <maxzz@msn.com>",
