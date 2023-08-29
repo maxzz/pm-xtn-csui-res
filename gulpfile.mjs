@@ -167,7 +167,7 @@ function createDevResourcesTask(done) {
                     //cssnano({ zindex: false }) // OK 'reduceIdents: false' but animation is not included //, discardUnused: false, reduceIdents: false
                     cssnano()
                 ]))
-                .pipe(noMaps ? through() : sourcemaps.write('.'))
+                .pipe(noMaps ? through() : sourcemaps.write('.', {}))
                 .pipe(skipEmptyPipe());
         }
     }
