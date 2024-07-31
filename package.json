@@ -69,6 +69,7 @@
         "w": "gulp",
         "g": "gulp res",
         "build:res": "gulp res",
-        "predeploy": "yarn build:res"
+        "_predeploy": "pnpm build:res",
+        "to-npm": "pnpm publish --no-git-checks"
     }
 }
